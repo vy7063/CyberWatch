@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CyberWatch • Security Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="brand"><div class="brand-mark">C</div><div><strong>CyberWatch<span>.</span></strong><small>SECURITY OPERATIONS</small></div></div>
+    <div class="workspace-label">WORKSPACE</div>
+    <button class="nav-item active" data-section="overview"><span>◫</span> Overview</button>
+    <button class="nav-item" data-section="alerts"><span>⚑</span> Threat alerts <b id="nav-alert-count">0</b></button>
+    <button class="nav-item" data-section="analytics"><span>▥</span> Analytics</button>
+    <button class="nav-item" data-section="logs"><span>≋</span> Event logs</button>
+    <div class="sidebar-bottom">
+      <div class="sensor-card"><div class="sensor-dot"></div><div><strong>Demo sensors online</strong><small>Simulated data source</small></div></div>
+      <div class="profile"><div class="avatar">AD</div><div><strong>Student Workspace</strong><small>Security analyst</small></div><span class="profile-more">···</span></div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="breadcrumb">Workspace <span>/</span> <strong id="crumb">Overview</strong></div>
+      <div class="top-actions"><span class="demo-tag"><i></i> SIMULATION MODE</span><span class="top-date" id="current-date"></span><button class="icon-btn" id="refresh-btn" title="Refresh data">↻</button></div>
+    </header>
+
+    <section class="page-heading">
+      <div><div class="eyebrow">SECURITY CENTER / <span>OVERVIEW</span></div><h1 id="page-title">Threat overview</h1><p>A student-built workspace for exploring simulated security events.</p></div>
+      <div class="heading-actions"><button class="btn btn-quiet" id="export-btn">↓ Export report</button><button class="btn btn-primary" id="generate-btn"><span>＋</span> Generate test event</button></div>
+    </section>
+
+    <div class="notice"><span class="notice-icon">ⓘ</span><div><strong>Training environment</strong><span> All events are sample or simulated records. This dashboard does not monitor a real network.</span></div><button id="dismiss-notice" aria-label="Dismiss notice">×</button></div>
+
+    <section class="view active" id="overview-view">
+      <div class="metrics">
+        <article class="metric-card"><div class="metric-top"><span>Total events</span><span class="metric-icon blue">≋</span></div><div class="metric-value" id="total-events">—</div><div class="metric-foot"><span class="foot-dot blue-dot"></span> All recorded events</div></article>
+        <article class="metric-card"><div class="metric-top"><span>Open alerts</span><span class="metric-icon amber">⚑</span></div><div class="metric-value" id="open-alerts">—</div><div class="metric-foot"><span class="foot-dot amber-dot"></span> Require review</div></article>
+        <article class="metric-card"><div class="metric-top"><span>Critical alerts</span><span class="metric-icon red">!</span></div><div class="metric-value" id="critical-alerts">—</div><div class="metric-foot"><span class="foot-dot red-dot"></span> Highest severity, open</div></article>
+        <article class="metric-card"><div class="metric-top"><span>Risk score</span><span class="metric-icon violet">⌁</span></div><div class="risk-line"><div class="metric-value" id="risk-score">—</div><span class="risk-unit">/ 100</span></div><div class="risk-track"><div id="risk-fill"></div></div><div class="metric-foot" id="risk-label">Calculated demo indicator</div></article>
+      </div>
+
+      <div class="dashboard-grid">
+        <article class="panel trend-panel"><div class="panel-heading"><div><h2>Event activity</h2><p>Recorded events over the last 12 hours</p></div><span class="live-pill"><i></i> REFRESH TO UPDATE</span></div><div class="chart-wrap"><canvas id="trend-chart"></canvas></div></article>
+        <article class="panel severity-panel"><div class="panel-heading"><div><h2>Severity breakdown</h2><p>Distribution across all events</p></div><button class="more-btn" title="Severity information">···</button></div><div class="donut-wrap"><canvas id="severity-chart"></canvas><div class="donut-center"><strong id="donut-total">0</strong><span>EVENTS</span></div></div><div id="severity-legend" class="legend"></div></article>
+      </div>
+
+      <div class="dashboard-grid lower-grid">
+        <article class="panel"><div class="panel-heading"><div><h2>Recent threat alerts</h2><p>Latest events requiring visibility</p></div><button class="text-btn" data-goto="alerts">View all alerts ↗</button></div><div id="recent-alerts" class="recent-list"></div></article>
+        <article class="panel"><div class="panel-heading"><div><h2>Top source addresses</h2><p>Most frequent sources in sample data</p></div><span class="tiny-label">TOP 5</span></div><div id="top-ips" class="ip-list"></div></article>
+      </div>
+    </section>
+
+    <section class="view" id="alerts-view">
+      <div class="panel table-panel"><div class="panel-heading table-heading"><div><h2>Threat alerts</h2><p>Search, filter, and review simulated incidents.</p></div><span id="result-count" class="result-count">0 results</span></div>
+        <div class="filters"><label class="searchbox"><span>⌕</span><input id="search-input" placeholder="Search title, IP, category..." autocomplete="off"></label><select id="severity-filter" aria-label="Filter severity"><option>All</option><option>Critical</option><option>High</option><option>Medium</option><option>Low</option></select><select id="status-filter" aria-label="Filter status"><option>All</option><option>Open</option><option>Resolved</option></select></div>
+        <div class="table-scroll"><table><thead><tr><th>EVENT</th><th>SOURCE IP</th><th>CATEGORY</th><th>SEVERITY</th><th>STATUS</th><th>TIME</th><th></th></tr></thead><tbody id="events-body"></tbody></table></div>
+        <div class="table-foot"><span>Showing up to 250 events</span><span>Data source: local SQLite</span></div>
+      </div>
+    </section>
+
+    <section class="view" id="analytics-view">
+      <div class="dashboard-grid analytics-grid"><article class="panel"><div class="panel-heading"><div><h2>Threat categories</h2><p>Event volume by category</p></div></div><div class="chart-wrap tall"><canvas id="category-chart"></canvas></div></article>
+      <article class="panel"><div class="panel-heading"><div><h2>Severity profile</h2><p>Counts by severity level</p></div></div><div class="severity-breakdown" id="severity-breakdown"></div></article></div>
+      <article class="panel methodology"><div class="panel-heading"><div><h2>How the demo risk score works</h2><p>A transparent rule-based teaching metric</p></div></div><div class="method-grid"><div><span class="method-num">01</span><strong>Critical open alerts</strong><p>Each contributes 18 points.</p></div><div><span class="method-num">02</span><strong>High open alerts</strong><p>Each contributes 8 points.</p></div><div><span class="method-num">03</span><strong>Open alert volume</strong><p>Add 1 point per open alert; score is capped at 100.</p></div></div><p class="disclaimer">This is a classroom demonstration metric, not a validated security risk model.</p></article>
+    </section>
+
+    <section class="view" id="logs-view">
+      <article class="panel table-panel"><div class="panel-heading"><div><h2>Event log explorer</h2><p>Inspect structured events from the local database.</p></div><button class="btn btn-quiet" id="logs-export">↓ Export CSV</button></div><div class="log-help">Tip: use the search box to find an IP address, event title, category, or asset.</div><div class="filters"><label class="searchbox"><span>⌕</span><input id="logs-search" placeholder="Search event logs..." autocomplete="off"></label><select id="logs-severity"><option>All</option><option>Critical</option><option>High</option><option>Medium</option><option>Low</option></select></div><div class="table-scroll"><table><thead><tr><th>ID / TIME</th><th>SOURCE IP</th><th>EVENT / ASSET</th><th>SEVERITY</th><th>STATUS</th></tr></thead><tbody id="logs-body"></tbody></table></div></article>
+    </section>
+
+    <footer><span><b>CyberWatch.</b> Security dashboard demo</span><span>Built for education · No real network monitoring</span></footer>
+  </main>
+</div>
+
+<div class="toast" id="toast" role="status"></div>
+<div class="modal-backdrop" id="modal-backdrop"><div class="modal"><button class="modal-close" id="modal-close">×</button><div class="eyebrow">EVENT INVESTIGATION</div><h2 id="modal-title">Event details</h2><div id="modal-content"></div><div class="modal-actions"><button class="btn btn-quiet" id="modal-close-2">Close</button><button class="btn btn-primary" id="modal-resolve">Mark resolved</button></div></div></div>
+<script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
