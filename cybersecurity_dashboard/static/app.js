@@ -96,10 +96,31 @@ async function resolveSelected(){
   try{await api(`/api/events/${selectedEventId}/resolve`,{method:"POST"});closeModal();toast("Event marked as resolved.");await refreshAll();}
   catch{toast("Could not update event.");}
 }
-async function generateEvent(){
-  try{const e=await api("/api/events/generate",{method:"POST"});toast(`Test event created: ${e.title}`);await refreshAll();}
-  catch{toast("Could not generate event.");}
+
+async function generateEvent() {
+  const btn = $("generate-btn");
+
+  if (btn.disabled) return;
+
+  const originalText = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = "Generating...";
+
+  try {
+    const event = await api("/api/events/generate", {
+      method: "POST"
+    });
+
+    toast(`Test event created: ${event.title}`);
+    await refreshAll();
+  } catch (error) {
+    toast("Could not generate event. Please try again.");
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = originalText;
+  }
 }
+
 function exportCsv(){window.location.href="/api/export.csv";}
 document.addEventListener("DOMContentLoaded",async()=>{
   $("current-date").textContent=new Date().toLocaleDateString([], {weekday:"short",month:"short",day:"numeric",year:"numeric"});
