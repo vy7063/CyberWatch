@@ -130,6 +130,7 @@ def export_csv():
     return Response(output.getvalue(), mimetype="text/csv",
                     headers={"Content-Disposition": "attachment; filename=security_events.csv"})
 
+init_db()
+
 if __name__ == "__main__":
-    init_db()
-    app.run(debug=True, host="127.0.0.1", port=5000)
+    app.run(debug=False, host="0.0.0.0", port=5000)
